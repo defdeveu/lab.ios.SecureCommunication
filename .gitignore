@@ -88,3 +88,8 @@ fastlane/test_output
 # https://github.com/johnno1962/injectionforxcode
 
 iOSInjectionProject/
+
+# Finder metadata and machine-local endpoint overrides do not belong in the
+# teaching repository.
+.DS_Store
+Config/Local.xcconfig

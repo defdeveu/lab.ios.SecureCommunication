@@ -1,82 +1,108 @@
 import Foundation
-import Combine
-import UIKit
+import Observation
 
-class ContentViewModel: ObservableObject {
-    @Published var response: Response = .none
-    @Published var message: String = "Demo message"
+@MainActor
+@Observable
+final class ContentViewModel {
+    var message = "Demo message"
+    private(set) var status = "Ready"
+    private(set) var rawResponse: String?
+    private(set) var decryptedResponse: String?
+    private(set) var isLoading = false
 
-    private var subscriptions = Set<AnyCancellable>()
-    private let networkService: NetworkServiceProtocol
-    private let messageRequest: MessageRequestProtocol
-    private let messageEncryption: MessageEncryptionProtocol
+    @ObservationIgnored private let configuration: LabConfiguration
+    @ObservationIgnored private let networkService: any NetworkServiceProtocol
+    @ObservationIgnored private let crypto: any SecureEnvelopeCryptoProtocol
+    @ObservationIgnored private var requestTask: Task<Void, Never>?
+    @ObservationIgnored private var activeOperation: UUID?
 
-    init(networkService: NetworkServiceProtocol = AppRepository.shared.networkService,
-         messageRequest: MessageRequestProtocol = AppRepository.shared.messageRequest,
-         messageEncryption: MessageEncryptionProtocol = AppRepository.shared.messageEncryption) {
+    init(
+        configuration: LabConfiguration,
+        networkService: any NetworkServiceProtocol,
+        crypto: any SecureEnvelopeCryptoProtocol,
+        initialMessage: String? = nil
+    ) {
+        self.configuration = configuration
         self.networkService = networkService
-        self.messageRequest = messageRequest
-        self.messageEncryption = messageEncryption
+        self.crypto = crypto
+        if let initialMessage {
+            status = initialMessage
+        }
     }
 
     func sendMessage() {
-        let encryptedMessage: String
-        let request: URLRequest
+        cancelRequest(updateStatus: false)
+        rawResponse = nil
+        decryptedResponse = nil
 
+        let sealed: SealedRequest
         do {
-            encryptedMessage = try messageEncryption.encrypt(message: message)
-            request = try messageRequest.request(with: encryptedMessage)
+            sealed = try crypto.seal(message: message)
         } catch {
-            response = .error(error.localizedDescription)
+            status = error.localizedDescription
             return
         }
 
-        response = .progress
+        var request = URLRequest(
+            url: configuration.endpoint,
+            cachePolicy: .reloadIgnoringLocalCacheData
+        )
+        request.httpMethod = "POST"
+        request.httpBody = sealed.body
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        networkService.process(request: request)
-            .sink { [weak self] result in
-                switch result {
-                case .failure(let error):
-                    self?.response = .error(error.localizedDescription)
-                case .finished:
-                    break
-                }
-            } receiveValue: { [weak self] data in
-                self?.response = .output(String(data: data, encoding: .utf8) ?? "<empty>")
+        let operation = UUID()
+        activeOperation = operation
+        isLoading = true
+        status = "Encrypting and sending…"
+        let networkService = self.networkService
+        let crypto = self.crypto
+
+        requestTask = Task { [weak self] in
+            do {
+                let data = try await networkService.process(request: request)
+                try Task.checkCancellation()
+                let raw = String(decoding: data, as: UTF8.self)
+                let response = try crypto.openResponse(data, context: sealed.responseContext)
+                try Task.checkCancellation()
+                guard self?.activeOperation == operation else { return }
+                self?.rawResponse = raw
+                self?.decryptedResponse = Self.describe(response)
+                self?.status = "Authenticated response received"
+            } catch is CancellationError {
+                return
+            } catch {
+                guard self?.activeOperation == operation else { return }
+                self?.status = error.localizedDescription
             }
-            .store(in: &subscriptions)
+            guard self?.activeOperation == operation else { return }
+            self?.isLoading = false
+            self?.requestTask = nil
+            self?.activeOperation = nil
+        }
     }
-}
 
-// MARK: - Response
+    func cancelRequest() {
+        cancelRequest(updateStatus: true)
+    }
 
-extension ContentViewModel {
-    enum Response {
-        case none
-        case progress
-        case output(String)
-        case error(String?)
-
-        var description: String {
-            switch self {
-            case .none:
-                return "No response"
-            case .progress:
-                return "In progress..."
-            case .output(let data):
-                return "Recieved:\n\n\(data)"
-            case .error(let error):
-                return "Error has occured:\n\n\(error ?? "Unable to read response")"
-            }
+    private func cancelRequest(updateStatus: Bool) {
+        requestTask?.cancel()
+        requestTask = nil
+        activeOperation = nil
+        isLoading = false
+        if updateStatus {
+            status = "Request cancelled"
         }
+    }
 
-        var isInProgress: Bool {
-            switch self {
-            case .progress:
-                return true
-            default:
-                return false
-            }
-        }
+    private static func describe(_ response: ResponsePlaintext) -> String {
+        """
+        Code: \(response.code)
+        Request: \(response.requestID)
+        Receipt: \(response.receiptID)
+        Message: \(response.message)
+        """
     }
 }

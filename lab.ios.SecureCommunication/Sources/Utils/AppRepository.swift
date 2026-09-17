@@ -1,29 +1,56 @@
 import Foundation
 
-// MARK: - Application Services
+struct LabConfiguration: Equatable, Sendable {
+    let endpoint: URL
 
-final class AppRepository {
-    static var shared = AppRepository()
-    private init() { }
+    static func load(from bundle: Bundle = .main) throws -> LabConfiguration {
+        try parse(bundle.infoDictionary ?? [:])
+    }
 
-    lazy var networkService: NetworkServiceProtocol = {
-        NetworkService()
-    }()
+    static func parse(_ values: [String: Any]) throws -> LabConfiguration {
+        guard let value = values["LabSecureCommunicationURL"] as? String,
+              let endpoint = URL(string: value),
+              endpoint.scheme == "https",
+              endpoint.host() != nil,
+              endpoint.path() == "/secure-communication/request"
+        else {
+            throw LabConfigurationError.invalidEndpoint
+        }
+        return LabConfiguration(endpoint: endpoint)
+    }
 
-    lazy var messageRequest: MessageRequestProtocol = {
-        MessageRequest(endpoint: "https://zs.labs.defdev.eu:9998/request")
-    }()
+    static let fallback = LabConfiguration(
+        endpoint: URL(string: "https://zsk.labs.def.dev/secure-communication/request")!
+    )
+}
 
-    private lazy var algorithmProvider: AlgorithmProviderProtocol = {
-        AlgorithmProvider()
-    }()
+enum LabConfigurationError: LocalizedError, Equatable {
+    case invalidEndpoint
 
-    private lazy var certificateRepository: CertificateRepositoryProtocol = {
-        CertificateRepository()
-    }()
+    var errorDescription: String? {
+        "LabSecureCommunicationURL must be an HTTPS /secure-communication/request URL."
+    }
+}
 
-    lazy var messageEncryption: MessageEncryptionProtocol = {
-        MessageEncryption(certificateRepository: certificateRepository,
-                          algorithmProvider: algorithmProvider)
-    }()
+enum AppRepository {
+    @MainActor
+    static func makeViewModel(bundle: Bundle = .main) -> ContentViewModel {
+        do {
+            let configuration = try LabConfiguration.load(from: bundle)
+            let keys = try BundleKeyRepository(bundle: bundle).loadKeys()
+            return ContentViewModel(
+                configuration: configuration,
+                networkService: NetworkService(),
+                crypto: SecureEnvelopeCrypto(keys: keys)
+            )
+        } catch {
+            let message = "Configuration error: \(error.localizedDescription)"
+            return ContentViewModel(
+                configuration: .fallback,
+                networkService: NetworkService(),
+                crypto: UnavailableEnvelopeCrypto(message: message),
+                initialMessage: message
+            )
+        }
+    }
 }

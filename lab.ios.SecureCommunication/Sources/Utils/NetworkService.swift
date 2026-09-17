@@ -1,32 +1,45 @@
 import Foundation
-import Combine
 
-/// A service protocol for executing network requests
-protocol NetworkServiceProtocol {
-    func process(request: URLRequest) -> AnyPublisher<Data, Error>
+protocol NetworkServiceProtocol: Sendable {
+    func process(request: URLRequest) async throws -> Data
 }
 
-/// Network service for actual network communication
-final class NetworkService {
-    private let session: URLSession
-    init(session: URLSession = URLSession.shared) {
-        self.session = session
+enum NetworkServiceError: LocalizedError, Equatable {
+    case nonHTTPResponse
+    case unexpectedStatus(Int)
+    case unexpectedContentType(String?)
+
+    var errorDescription: String? {
+        switch self {
+        case .nonHTTPResponse:
+            "The server did not return an HTTP response."
+        case let .unexpectedStatus(status):
+            "The server returned HTTP status \(status)."
+        case let .unexpectedContentType(contentType):
+            "The server returned an unexpected content type: \(contentType ?? "missing")."
+        }
     }
 }
 
-// MARK: - NetworkServiceProtocol
+final class NetworkService: NetworkServiceProtocol, @unchecked Sendable {
+    private let session: URLSession
 
-extension NetworkService: NetworkServiceProtocol {
-    func process(request: URLRequest) -> AnyPublisher<Data, Error> {
-        session.dataTaskPublisher(for: request)
-            .tryMap { output in
-                guard let httpResponse = output.response as? HTTPURLResponse,
-                    httpResponse.statusCode == 200
-                else { throw URLError(.badServerResponse) }
+    init(session: URLSession = .shared) {
+        self.session = session
+    }
 
-                return output.data
-            }
-            .receive(on: DispatchQueue.main)
-            .eraseToAnyPublisher()
+    func process(request: URLRequest) async throws -> Data {
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkServiceError.nonHTTPResponse
+        }
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw NetworkServiceError.unexpectedStatus(httpResponse.statusCode)
+        }
+        let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type")
+        guard contentType?.lowercased().hasPrefix("application/json") == true else {
+            throw NetworkServiceError.unexpectedContentType(contentType)
+        }
+        return data
     }
 }

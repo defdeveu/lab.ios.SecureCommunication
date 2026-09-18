@@ -1,5 +1,5 @@
 // Copy this file to the ignored Local.xcconfig and select it as the app target
 // base configuration when an instructor has provisioned the matching server
-// private key in the local HiPinSecom Compose stack.
+// private key in the local HiPinSeco Compose stack.
 LAB_URL_SLASH = /
 LAB_SECURE_COMMUNICATION_URL = https:$(LAB_URL_SLASH)$(LAB_URL_SLASH)localhost:8443/secure-communication/request

@@ -1,7 +1,7 @@
 # Secure Communication lab
 
 An iOS teaching application that sends a signed, application-encrypted message
-through the shared HiPinSecom HTTPS service and displays both the encrypted wire
+through the shared HiPinSeco HTTPS service and displays both the encrypted wire
 response and its authenticated plaintext interpretation.
 
 ## Requirements
@@ -22,4 +22,4 @@ configuration.
 The fixed bundled credentials are classroom material. They demonstrate
 protocol mechanics and do not represent production per-user or per-device
 identity. Detailed protocol, server, and key-operations documentation is kept
-in the private `lab.server.HiPinSecom` repository.
+in the private `lab.server.HiPinSeco` repository.

@@ -15,7 +15,3 @@ struct SolidButtonStyle: ButtonStyle {
 enum AppStrings {
     static let appTitle = "Secure Communication Lab"
 }
-
-enum AppImages {
-    static let appTitleImage = Image("logo.ddd.stamp.1905")
-}

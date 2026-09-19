@@ -51,7 +51,7 @@ struct ContentView: View {
         .toolbarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                AppImages.appTitleImage
+                Image(.logoDddStamp1905)
                     .resizable()
                     .renderingMode(.template)
                     .scaledToFit()
@@ -97,10 +97,8 @@ struct ContentView: View {
     }
 }
 
-struct ContentViewPreviews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
-            ContentView()
-        }
+#Preview {
+    NavigationStack {
+        ContentView()
     }
 }

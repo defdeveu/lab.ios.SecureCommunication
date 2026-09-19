@@ -1,31 +1,40 @@
 import CryptoKit
 import Foundation
 import Security
-import XCTest
+import Testing
 @testable import lab_ios_SecureCommunication
 
-final class LabConfigurationTests: XCTestCase {
-    func testParsesHostedEndpoint() throws {
+@Suite
+struct LabConfigurationTests {
+    @Test
+    func parsesHostedEndpoint() throws {
         let configuration = try LabConfiguration.parse([
             "LabSecureCommunicationURL": "https://zsk.labs.def.dev/secure-communication/request",
         ])
-        XCTAssertEqual(configuration.endpoint.scheme, "https")
-        XCTAssertEqual(configuration.endpoint.host(), "zsk.labs.def.dev")
-        XCTAssertEqual(configuration.endpoint.path(), "/secure-communication/request")
+        #expect(configuration.endpoint.scheme == "https")
+        #expect(configuration.endpoint.host() == "zsk.labs.def.dev")
+        #expect(configuration.endpoint.path() == "/secure-communication/request")
     }
 
-    func testRejectsHTTPAndWrongPath() {
-        XCTAssertThrowsError(try LabConfiguration.parse([
-            "LabSecureCommunicationURL": "http://zsk.labs.def.dev/secure-communication/request",
-        ]))
-        XCTAssertThrowsError(try LabConfiguration.parse([
-            "LabSecureCommunicationURL": "https://zsk.labs.def.dev/request",
-        ]))
+    @Test
+    func rejectsHTTPAndWrongPath() {
+        #expect(throws: (any Error).self) {
+            try LabConfiguration.parse([
+                "LabSecureCommunicationURL": "http://zsk.labs.def.dev/secure-communication/request",
+            ])
+        }
+        #expect(throws: (any Error).self) {
+            try LabConfiguration.parse([
+                "LabSecureCommunicationURL": "https://zsk.labs.def.dev/request",
+            ])
+        }
     }
 }
 
-final class SecureEnvelopeTests: XCTestCase {
-    func testCanonicalSignatureInputMatchesGoVector() throws {
+@Suite
+struct SecureEnvelopeTests {
+    @Test
+    func canonicalSignatureInputMatchesGoVector() throws {
         let input = try CanonicalSignatureInput.make(
             encryptedKey: Data([1, 2]),
             nonce: Data([3]),
@@ -33,13 +42,11 @@ final class SecureEnvelopeTests: XCTestCase {
             tag: Data([7])
         )
         let digest = Data(SHA256.hash(data: input))
-        XCTAssertEqual(
-            digest.hexadecimal,
-            "4b256a64557682b64dbdd1e1685da851552152416d8cc9104ae863fa3c0df5f9"
-        )
+        #expect(digest.hexadecimal == "4b256a64557682b64dbdd1e1685da851552152416d8cc9104ae863fa3c0df5f9")
     }
 
-    func testBundledKeysImportAndCreateSignedEnvelope() throws {
+    @Test
+    func bundledKeysImportAndCreateSignedEnvelope() throws {
         let keys = try BundleKeyRepository(bundle: .main).loadKeys()
         let crypto = SecureEnvelopeCrypto(
             keys: keys,
@@ -49,33 +56,34 @@ final class SecureEnvelopeTests: XCTestCase {
         let sealed = try crypto.seal(message: "hello")
         let envelope = try JSONDecoder().decode(RequestEnvelope.self, from: sealed.body)
 
-        let encryptedKey = try XCTUnwrap(Data(base64Encoded: envelope.encryptedKey))
-        let nonce = try XCTUnwrap(Data(base64Encoded: envelope.nonce))
-        let ciphertext = try XCTUnwrap(Data(base64Encoded: envelope.ciphertext))
-        let tag = try XCTUnwrap(Data(base64Encoded: envelope.tag))
-        let signature = try XCTUnwrap(Data(base64Encoded: envelope.signature))
+        let encryptedKey = try #require(Data(base64Encoded: envelope.encryptedKey))
+        let nonce = try #require(Data(base64Encoded: envelope.nonce))
+        let ciphertext = try #require(Data(base64Encoded: envelope.ciphertext))
+        let tag = try #require(Data(base64Encoded: envelope.tag))
+        let signature = try #require(Data(base64Encoded: envelope.signature))
         let input = try CanonicalSignatureInput.make(
             encryptedKey: encryptedKey,
             nonce: nonce,
             ciphertext: ciphertext,
             tag: tag
         )
-        let clientPublicKey = try XCTUnwrap(SecKeyCopyPublicKey(keys.clientPrivateKey))
+        let clientPublicKey = try #require(SecKeyCopyPublicKey(keys.clientPrivateKey))
         var verificationError: Unmanaged<CFError>?
-        XCTAssertTrue(SecKeyVerifySignature(
+        #expect(SecKeyVerifySignature(
             clientPublicKey,
             .rsaSignatureMessagePSSSHA256,
             input as CFData,
             signature as CFData,
             &verificationError
         ))
-        XCTAssertNil(verificationError)
-        XCTAssertEqual(envelope.version, SecureProtocolConstants.version)
-        XCTAssertEqual(nonce.count, SecureProtocolConstants.nonceBytes)
-        XCTAssertEqual(tag.count, SecureProtocolConstants.tagBytes)
+        #expect(verificationError == nil)
+        #expect(envelope.version == SecureProtocolConstants.version)
+        #expect(nonce.count == SecureProtocolConstants.nonceBytes)
+        #expect(tag.count == SecureProtocolConstants.tagBytes)
     }
 
-    func testOpensAuthenticatedResponseAndRejectsWrongRequest() throws {
+    @Test
+    func opensAuthenticatedResponseAndRejectsWrongRequest() throws {
         let keys = try BundleKeyRepository(bundle: .main).loadKeys()
         let crypto = SecureEnvelopeCrypto(keys: keys)
         let symmetricKey = SymmetricKey(data: Data(repeating: 0x42, count: 32))
@@ -105,20 +113,24 @@ final class SecureEnvelopeTests: XCTestCase {
             wire,
             context: ResponseContext(symmetricKey: symmetricKey, requestID: requestID)
         )
-        XCTAssertEqual(opened, response)
-        XCTAssertThrowsError(try crypto.openResponse(
-            wire,
-            context: ResponseContext(
-                symmetricKey: symmetricKey,
-                requestID: "ffffffff-ffff-4fff-8fff-ffffffffffff"
+        #expect(opened == response)
+        #expect(throws: (any Error).self) {
+            try crypto.openResponse(
+                wire,
+                context: ResponseContext(
+                    symmetricKey: symmetricKey,
+                    requestID: "ffffffff-ffff-4fff-8fff-ffffffffffff"
+                )
             )
-        ))
+        }
     }
 }
 
 @MainActor
-final class ContentViewModelTests: XCTestCase {
-    func testDisplaysRawAndDecryptedResponse() async {
+@Suite
+struct ContentViewModelTests {
+    @Test
+    func displaysRawAndDecryptedResponse() async {
         let responseData = Data("{\"encrypted\":true}".utf8)
         let network = RecordingNetworkService(response: responseData)
         let crypto = RecordingCrypto()
@@ -136,12 +148,12 @@ final class ContentViewModelTests: XCTestCase {
             await Task.yield()
         }
 
-        XCTAssertEqual(viewModel.rawResponse, "{\"encrypted\":true}")
-        XCTAssertTrue(viewModel.decryptedResponse?.contains("Receipt: receipt-id") == true)
+        #expect(viewModel.rawResponse == "{\"encrypted\":true}")
+        #expect(viewModel.decryptedResponse?.contains("Receipt: receipt-id") == true)
         let requests = await network.requests
-        XCTAssertEqual(requests.first?.url, configuration.endpoint)
-        XCTAssertEqual(requests.first?.httpMethod, "POST")
-        XCTAssertEqual(requests.first?.value(forHTTPHeaderField: "Content-Type"), "application/json")
+        #expect(requests.first?.url == configuration.endpoint)
+        #expect(requests.first?.httpMethod == "POST")
+        #expect(requests.first?.value(forHTTPHeaderField: "Content-Type") == "application/json")
     }
 }
 

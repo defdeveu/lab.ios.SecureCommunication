@@ -3,9 +3,8 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 100;
 	objects = {
-
 
 /* Begin PBXContainerItemProxy section */
 		B30000000000000000000001 /* PBXContainerItemProxy */ = {
@@ -18,18 +17,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-
 		B2000000000000000000000E /* Hosted.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Hosted.xcconfig; sourceTree = "<group>"; };
-
 		B2000000000000000000000F /* Local.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.example.xcconfig; sourceTree = "<group>"; };
-
 		B20000000000000000000010 /* Secure Communication lab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Secure Communication lab.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-
-		B20000000000000000000011 /* Secure Communication labTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Secure Communication labTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B20000000000000000000011 /* lab.ios.SecureCommunicationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lab.ios.SecureCommunicationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 		04C57ADE8371133EF9E8CA82 /* Exceptions for "lab.ios.SecureCommunication" folder in "lab.ios.SecureCommunication" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -37,11 +31,14 @@
 			);
 			target = B70000000000000000000001 /* lab.ios.SecureCommunication */;
 		};
-
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-
+		69BF0A0B8920F852A2F332EC /* lab.ios.SecureCommunicationTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = lab.ios.SecureCommunicationTests;
+			sourceTree = "<group>";
+		};
 		6CF2C4B246EBFF8FCA925CD3 /* lab.ios.SecureCommunication */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -50,58 +47,46 @@
 			path = lab.ios.SecureCommunication;
 			sourceTree = "<group>";
 		};
-		69BF0A0B8920F852A2F332EC /* lab.ios.SecureCommunicationTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = lab.ios.SecureCommunicationTests;
-			sourceTree = "<group>";
-		};
-
 /* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		B40000000000000000000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B40000000000000000000002 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-
 		B50000000000000000000001 = {
 			isa = PBXGroup;
 			children = (
-				6CF2C4B246EBFF8FCA925CD3,
-				69BF0A0B8920F852A2F332EC,
-				B50000000000000000000008,
-				B50000000000000000000009,
+				6CF2C4B246EBFF8FCA925CD3 /* lab.ios.SecureCommunication */,
+				69BF0A0B8920F852A2F332EC /* lab.ios.SecureCommunicationTests */,
+				B50000000000000000000008 /* Config */,
+				B50000000000000000000009 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-
 		B50000000000000000000008 /* Config */ = {
 			isa = PBXGroup;
 			children = (
-				B2000000000000000000000E,
-				B2000000000000000000000F,
+				B2000000000000000000000E /* Hosted.xcconfig */,
+				B2000000000000000000000F /* Local.example.xcconfig */,
 			);
 			path = Config;
 			sourceTree = "<group>";
 		};
-
 		B50000000000000000000009 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B20000000000000000000010,
-				B20000000000000000000011,
+				B20000000000000000000010 /* Secure Communication lab.app */,
+				B20000000000000000000011 /* lab.ios.SecureCommunicationTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -118,8 +103,6 @@
 				B80000000000000000000001 /* Resources */,
 			);
 			buildRules = (
-			);
-			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
 				6CF2C4B246EBFF8FCA925CD3 /* lab.ios.SecureCommunication */,
@@ -146,7 +129,7 @@
 			);
 			name = lab.ios.SecureCommunicationTests;
 			productName = "Secure Communication labTests";
-			productReference = B20000000000000000000011 /* Secure Communication labTests.xctest */;
+			productReference = B20000000000000000000011 /* lab.ios.SecureCommunicationTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -157,7 +140,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2700;
-				LastUpgradeCheck = 2700;
+				LastUpgradeCheck = 2720;
 				TargetAttributes = {
 					B70000000000000000000001 = {
 						CreatedOnToolsVersion = 27.0;
@@ -176,7 +159,7 @@
 				Base,
 			);
 			mainGroup = B50000000000000000000001;
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 100;
 			productRefGroup = B50000000000000000000009 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -190,27 +173,21 @@
 /* Begin PBXResourcesBuildPhase section */
 		B80000000000000000000001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B60000000000000000000001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B60000000000000000000002 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
@@ -223,18 +200,38 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		BC0000000000000000000001 /* Debug */ = {
+		BC0000000000000000000001 /* Debug configuration for PBXProject "lab.ios.SecureCommunication" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -242,42 +239,76 @@
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
-		BC0000000000000000000002 /* Release */ = {
+		BC0000000000000000000002 /* Release configuration for PBXProject "lab.ios.SecureCommunication" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
-		BC0000000000000000000003 /* Debug */ = {
+		BC0000000000000000000003 /* Debug configuration for PBXNativeTarget "lab.ios.SecureCommunication" */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = B2000000000000000000000E /* Hosted.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
@@ -301,12 +332,12 @@
 			};
 			name = Debug;
 		};
-		BC0000000000000000000004 /* Release */ = {
+		BC0000000000000000000004 /* Release configuration for PBXNativeTarget "lab.ios.SecureCommunication" */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = B2000000000000000000000E /* Hosted.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
@@ -329,7 +360,7 @@
 			};
 			name = Release;
 		};
-		BC0000000000000000000005 /* Debug */ = {
+		BC0000000000000000000005 /* Debug configuration for PBXNativeTarget "lab.ios.SecureCommunicationTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -351,7 +382,7 @@
 			};
 			name = Debug;
 		};
-		BC0000000000000000000006 /* Release */ = {
+		BC0000000000000000000006 /* Release configuration for PBXNativeTarget "lab.ios.SecureCommunicationTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -379,28 +410,25 @@
 		BB0000000000000000000001 /* Build configuration list for PBXNativeTarget "lab.ios.SecureCommunication" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				BC0000000000000000000003 /* Debug */,
-				BC0000000000000000000004 /* Release */,
+				BC0000000000000000000003 /* Debug configuration for PBXNativeTarget "lab.ios.SecureCommunication" */,
+				BC0000000000000000000004 /* Release configuration for PBXNativeTarget "lab.ios.SecureCommunication" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		BB0000000000000000000002 /* Build configuration list for PBXNativeTarget "lab.ios.SecureCommunicationTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				BC0000000000000000000005 /* Debug */,
-				BC0000000000000000000006 /* Release */,
+				BC0000000000000000000005 /* Debug configuration for PBXNativeTarget "lab.ios.SecureCommunicationTests" */,
+				BC0000000000000000000006 /* Release configuration for PBXNativeTarget "lab.ios.SecureCommunicationTests" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		BB0000000000000000000003 /* Build configuration list for PBXProject "lab.ios.SecureCommunication" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				BC0000000000000000000001 /* Debug */,
-				BC0000000000000000000002 /* Release */,
+				BC0000000000000000000001 /* Debug configuration for PBXProject "lab.ios.SecureCommunication" */,
+				BC0000000000000000000002 /* Release configuration for PBXProject "lab.ios.SecureCommunication" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */

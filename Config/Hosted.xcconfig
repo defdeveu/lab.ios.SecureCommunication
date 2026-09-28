@@ -5,3 +5,7 @@
 // Info.plist instead of silently truncating it after "https:".
 LAB_URL_SLASH = /
 LAB_SECURE_COMMUNICATION_URL = https:$(LAB_URL_SLASH)$(LAB_URL_SLASH)zsk.labs.def.dev/secure-communication/request
+
+// A gitignored Local.xcconfig overrides the value above when it is present;
+// #include? is an optional include, so ordinary builds are unaffected.
+#include? "Local.xcconfig"

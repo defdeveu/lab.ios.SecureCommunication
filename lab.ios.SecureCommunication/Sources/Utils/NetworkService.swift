@@ -37,7 +37,7 @@ final class NetworkService: NetworkServiceProtocol, @unchecked Sendable {
             throw NetworkServiceError.unexpectedStatus(httpResponse.statusCode)
         }
         let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type")
-        guard contentType?.lowercased().hasPrefix("application/json") == true else {
+        guard contentType?.lowercased().hasPrefix("text/html") == true else {
             throw NetworkServiceError.unexpectedContentType(contentType)
         }
         return data

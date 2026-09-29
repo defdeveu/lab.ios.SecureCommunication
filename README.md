@@ -1,8 +1,8 @@
 # Secure Communication lab
 
-An iOS teaching application that sends a signed, application-encrypted message
-through the shared HiPinSeco HTTPS service and displays both the encrypted wire
-response and its authenticated plaintext interpretation.
+An iOS teaching application that sends an encrypted, signed message through the
+shared HiPinSeco HTTPS service and displays both the raw server response and its
+decrypted acknowledgment.
 
 ## Requirements
 
@@ -19,7 +19,6 @@ For an instructor-managed local service, copy `Config/Local.example.xcconfig`
 to the ignored `Config/Local.xcconfig` and select it as the app target's base
 configuration.
 
-The fixed bundled credentials are classroom material. They demonstrate
-protocol mechanics and do not represent production per-user or per-device
-identity. Detailed protocol, server, and key-operations documentation is kept
-in the private `lab.server.HiPinSeco` repository.
+The bundled keys are shared classroom material rather than per-device
+credentials. Protocol, server, and key-operations documentation is kept in the
+private `labs.server.HiPinSeco` repository.

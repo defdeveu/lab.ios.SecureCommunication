@@ -41,14 +41,14 @@ enum AppRepository {
             return ContentViewModel(
                 configuration: configuration,
                 networkService: NetworkService(),
-                crypto: SecureEnvelopeCrypto(keys: keys)
+                encryption: MessageEncryption(keys: keys)
             )
         } catch {
             let message = "Configuration error: \(error.localizedDescription)"
             return ContentViewModel(
                 configuration: .fallback,
                 networkService: NetworkService(),
-                crypto: UnavailableEnvelopeCrypto(message: message),
+                encryption: UnavailableMessageEncryption(message: message),
                 initialMessage: message
             )
         }

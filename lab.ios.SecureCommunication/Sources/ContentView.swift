@@ -39,7 +39,7 @@ struct ContentView: View {
                     placeholder: "No response received yet."
                 )
                 responseSection(
-                    title: "Authenticated plaintext",
+                    title: "Decrypted server response",
                     value: viewModel.decryptedResponse,
                     placeholder: "A valid response will be decrypted here."
                 )
@@ -66,7 +66,7 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Protect a message above the transport layer")
                 .font(.title2.bold())
-            Text("The app creates a fresh symmetric key, encrypts the message, signs the envelope, and authenticates the encrypted reply.")
+            Text("The app encrypts the message, signs the outgoing payload, and decrypts the server's encrypted reply.")
                 .foregroundStyle(.secondary)
         }
     }

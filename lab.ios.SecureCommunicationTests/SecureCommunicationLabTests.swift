@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 import Security
 import Testing
@@ -32,96 +31,65 @@ struct LabConfigurationTests {
 }
 
 @Suite
-struct SecureEnvelopeTests {
+struct MessageEncryptionTests {
     @Test
-    func canonicalSignatureInputMatchesGoVector() throws {
-        let input = try CanonicalSignatureInput.make(
-            encryptedKey: Data([1, 2]),
-            nonce: Data([3]),
-            ciphertext: Data([4, 5, 6]),
-            tag: Data([7])
-        )
-        let digest = Data(SHA256.hash(data: input))
-        #expect(digest.hexadecimal == "4b256a64557682b64dbdd1e1685da851552152416d8cc9104ae863fa3c0df5f9")
+    func bundledKeysLoadFromTheAppBundle() throws {
+        let keys = try BundleKeyRepository(bundle: .main).loadKeys()
+        #expect(SecKeyGetBlockSize(keys.serverPublicKey) == 256)
+        #expect(SecKeyGetBlockSize(keys.clientPrivateKey) == 256)
     }
 
     @Test
-    func bundledKeysImportAndCreateSignedEnvelope() throws {
+    func encryptBuildsTheWireRequest() throws {
         let keys = try BundleKeyRepository(bundle: .main).loadKeys()
-        let crypto = SecureEnvelopeCrypto(
-            keys: keys,
-            now: { Date(timeIntervalSince1970: 1_789_646_400) },
-            makeRequestID: { UUID(uuidString: "12345678-1234-4123-8123-123456789ABC")! }
-        )
-        let sealed = try crypto.seal(message: "hello")
-        let envelope = try JSONDecoder().decode(RequestEnvelope.self, from: sealed.body)
+        let sealed = try MessageEncryption(keys: keys).encrypt(message: "hello")
+        let xml = try #require(String(data: sealed.body, encoding: .utf8))
+        let fields = try wireFields(fromRequest: xml)
 
-        let encryptedKey = try #require(Data(base64Encoded: envelope.encryptedKey))
-        let nonce = try #require(Data(base64Encoded: envelope.nonce))
-        let ciphertext = try #require(Data(base64Encoded: envelope.ciphertext))
-        let tag = try #require(Data(base64Encoded: envelope.tag))
-        let signature = try #require(Data(base64Encoded: envelope.signature))
-        let input = try CanonicalSignatureInput.make(
-            encryptedKey: encryptedKey,
-            nonce: nonce,
-            ciphertext: ciphertext,
-            tag: tag
+        let ciphertext = try #require(Data(base64Encoded: fields.message))
+        #expect(ciphertext.count == 16)
+        let plaintext = try MessageCrypto.aesCBCDecrypt(
+            ciphertext,
+            key: sealed.material.key,
+            iv: sealed.material.iv
         )
-        let clientPublicKey = try #require(SecKeyCopyPublicKey(keys.clientPrivateKey))
+        #expect(String(decoding: plaintext, as: UTF8.self) == "hello")
+
+        let wrappedKey = try #require(Data(base64Encoded: fields.enckey))
+        #expect(wrappedKey.count == 256)
+
+        let signature = try #require(Data(base64Encoded: fields.signature))
+        let publicKey = try #require(SecKeyCopyPublicKey(keys.clientPrivateKey))
         var verificationError: Unmanaged<CFError>?
         #expect(SecKeyVerifySignature(
-            clientPublicKey,
-            .rsaSignatureMessagePSSSHA256,
-            input as CFData,
+            publicKey,
+            .rsaSignatureMessagePKCS1v15SHA1,
+            ciphertext as CFData,
             signature as CFData,
             &verificationError
         ))
         #expect(verificationError == nil)
-        #expect(envelope.version == SecureProtocolConstants.version)
-        #expect(nonce.count == SecureProtocolConstants.nonceBytes)
-        #expect(tag.count == SecureProtocolConstants.tagBytes)
+
+        #expect(MessageEncryptionConstants.aesKey == "00112233445566778899aabbccddeeff")
+        #expect(MessageEncryptionConstants.aesIV == "1111111111111111")
     }
 
     @Test
-    func opensAuthenticatedResponseAndRejectsWrongRequest() throws {
+    func decryptsTheServerResponse() throws {
         let keys = try BundleKeyRepository(bundle: .main).loadKeys()
-        let crypto = SecureEnvelopeCrypto(keys: keys)
-        let symmetricKey = SymmetricKey(data: Data(repeating: 0x42, count: 32))
-        let requestID = "12345678-1234-4123-8123-123456789abc"
-        let response = ResponsePlaintext(
-            requestID: requestID,
-            code: 0,
-            receiptID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
-            message: "Message accepted."
+        let encryption = MessageEncryption(keys: keys)
+        let acknowledgment = "<code>0</code><id>0123456789abcdef0123456789abcdef</id>"
+        let ciphertext = try MessageCrypto.aesCBCEncrypt(
+            Data(acknowledgment.utf8),
+            key: SymmetricMaterial.classroom.key,
+            iv: SymmetricMaterial.classroom.iv
         )
-        let plaintext = try JSONEncoder().encode(response)
-        let sealed = try AES.GCM.seal(
-            plaintext,
-            using: symmetricKey,
-            nonce: AES.GCM.Nonce(data: Data(repeating: 7, count: 12)),
-            authenticating: SecureProtocolConstants.responseAuthenticatedData(requestID: requestID)
-        )
-        let envelope = ResponseEnvelope(
-            version: 1,
-            nonce: sealed.nonce.withUnsafeBytes { Data($0) }.base64EncodedString(),
-            ciphertext: sealed.ciphertext.base64EncodedString(),
-            tag: sealed.tag.base64EncodedString()
-        )
-        let wire = try JSONEncoder().encode(envelope)
+        let wire = Data("<response>\(ciphertext.base64EncodedString())</response>".utf8)
 
-        let opened = try crypto.openResponse(
-            wire,
-            context: ResponseContext(symmetricKey: symmetricKey, requestID: requestID)
-        )
-        #expect(opened == response)
+        let decrypted = try encryption.decryptResponse(wire, material: .classroom)
+        #expect(decrypted == acknowledgment)
         #expect(throws: (any Error).self) {
-            try crypto.openResponse(
-                wire,
-                context: ResponseContext(
-                    symmetricKey: symmetricKey,
-                    requestID: "ffffffff-ffff-4fff-8fff-ffffffffffff"
-                )
-            )
+            try encryption.decryptResponse(Data("not a response".utf8), material: .classroom)
         }
     }
 }
@@ -130,17 +98,23 @@ struct SecureEnvelopeTests {
 @Suite
 struct ContentViewModelTests {
     @Test
-    func displaysRawAndDecryptedResponse() async {
-        let responseData = Data("{\"encrypted\":true}".utf8)
-        let network = RecordingNetworkService(response: responseData)
-        let crypto = RecordingCrypto()
+    func displaysRawAndDecryptedResponse() async throws {
+        let keys = try BundleKeyRepository(bundle: .main).loadKeys()
+        let acknowledgment = "<code>0</code><id>0123456789abcdef0123456789abcdef</id>"
+        let ciphertext = try MessageCrypto.aesCBCEncrypt(
+            Data(acknowledgment.utf8),
+            key: SymmetricMaterial.classroom.key,
+            iv: SymmetricMaterial.classroom.iv
+        )
+        let wire = Data("<response>\(ciphertext.base64EncodedString())</response>".utf8)
+        let network = RecordingNetworkService(response: wire)
         let configuration = LabConfiguration(
             endpoint: URL(string: "https://example.test/secure-communication/request")!
         )
         let viewModel = ContentViewModel(
             configuration: configuration,
             networkService: network,
-            crypto: crypto
+            encryption: MessageEncryption(keys: keys)
         )
 
         viewModel.sendMessage()
@@ -148,13 +122,45 @@ struct ContentViewModelTests {
             await Task.yield()
         }
 
-        #expect(viewModel.rawResponse == "{\"encrypted\":true}")
-        #expect(viewModel.decryptedResponse?.contains("Receipt: receipt-id") == true)
+        #expect(viewModel.rawResponse == String(decoding: wire, as: UTF8.self))
+        #expect(viewModel.decryptedResponse == acknowledgment)
+        #expect(viewModel.status == "Response received")
         let requests = await network.requests
         #expect(requests.first?.url == configuration.endpoint)
         #expect(requests.first?.httpMethod == "POST")
-        #expect(requests.first?.value(forHTTPHeaderField: "Content-Type") == "application/json")
+        #expect(requests.first?.value(forHTTPHeaderField: "Content-Type") == "application/text")
     }
+
+    @Test
+    func reportsTransportFailures() async throws {
+        let keys = try BundleKeyRepository(bundle: .main).loadKeys()
+        let configuration = LabConfiguration(
+            endpoint: URL(string: "https://example.test/secure-communication/request")!
+        )
+        let viewModel = ContentViewModel(
+            configuration: configuration,
+            networkService: FailingNetworkService(),
+            encryption: MessageEncryption(keys: keys)
+        )
+
+        viewModel.sendMessage()
+        while viewModel.isLoading {
+            await Task.yield()
+        }
+
+        #expect(viewModel.status == "The server returned HTTP status 400.")
+        #expect(viewModel.rawResponse == nil)
+        #expect(viewModel.decryptedResponse == nil)
+    }
+}
+
+private func wireFields(fromRequest xml: String) throws -> (enckey: String, message: String, signature: String) {
+    func value(of tag: String) throws -> String {
+        let opening = try #require(xml.range(of: "<\(tag)>"))
+        let closing = try #require(xml.range(of: "</\(tag)>"))
+        return String(xml[opening.upperBound..<closing.lowerBound])
+    }
+    return (try value(of: "enckey"), try value(of: "message"), try value(of: "signature"))
 }
 
 private actor RecordingNetworkService: NetworkServiceProtocol {
@@ -171,28 +177,8 @@ private actor RecordingNetworkService: NetworkServiceProtocol {
     }
 }
 
-private final class RecordingCrypto: SecureEnvelopeCryptoProtocol, @unchecked Sendable {
-    private let context = ResponseContext(
-        symmetricKey: SymmetricKey(data: Data(repeating: 0x42, count: 32)),
-        requestID: "12345678-1234-4123-8123-123456789abc"
-    )
-
-    func seal(message _: String) throws -> SealedRequest {
-        SealedRequest(body: Data("{\"request\":true}".utf8), responseContext: context)
-    }
-
-    func openResponse(_: Data, context _: ResponseContext) throws -> ResponsePlaintext {
-        ResponsePlaintext(
-            requestID: context.requestID,
-            code: 0,
-            receiptID: "receipt-id",
-            message: "Message accepted."
-        )
-    }
-}
-
-private extension Data {
-    var hexadecimal: String {
-        map { String(format: "%02x", $0) }.joined()
+private actor FailingNetworkService: NetworkServiceProtocol {
+    func process(request _: URLRequest) async throws -> Data {
+        throw NetworkServiceError.unexpectedStatus(400)
     }
 }

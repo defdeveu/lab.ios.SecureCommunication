@@ -12,19 +12,19 @@ final class ContentViewModel {
 
     @ObservationIgnored private let configuration: LabConfiguration
     @ObservationIgnored private let networkService: any NetworkServiceProtocol
-    @ObservationIgnored private let crypto: any SecureEnvelopeCryptoProtocol
+    @ObservationIgnored private let encryption: any MessageEncryptionProtocol
     @ObservationIgnored private var requestTask: Task<Void, Never>?
     @ObservationIgnored private var activeOperation: UUID?
 
     init(
         configuration: LabConfiguration,
         networkService: any NetworkServiceProtocol,
-        crypto: any SecureEnvelopeCryptoProtocol,
+        encryption: any MessageEncryptionProtocol,
         initialMessage: String? = nil
     ) {
         self.configuration = configuration
         self.networkService = networkService
-        self.crypto = crypto
+        self.encryption = encryption
         if let initialMessage {
             status = initialMessage
         }
@@ -35,9 +35,9 @@ final class ContentViewModel {
         rawResponse = nil
         decryptedResponse = nil
 
-        let sealed: SealedRequest
+        let sealed: SealedMessage
         do {
-            sealed = try crypto.seal(message: message)
+            sealed = try encryption.encrypt(message: message)
         } catch {
             status = error.localizedDescription
             return
@@ -49,27 +49,26 @@ final class ContentViewModel {
         )
         request.httpMethod = "POST"
         request.httpBody = sealed.body
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/text", forHTTPHeaderField: "Content-Type")
 
         let operation = UUID()
         activeOperation = operation
         isLoading = true
         status = "Encrypting and sending…"
         let networkService = self.networkService
-        let crypto = self.crypto
+        let encryption = self.encryption
 
         requestTask = Task { [weak self] in
             do {
                 let data = try await networkService.process(request: request)
                 try Task.checkCancellation()
                 let raw = String(decoding: data, as: UTF8.self)
-                let response = try crypto.openResponse(data, context: sealed.responseContext)
+                let decrypted = try encryption.decryptResponse(data, material: sealed.material)
                 try Task.checkCancellation()
                 guard self?.activeOperation == operation else { return }
                 self?.rawResponse = raw
-                self?.decryptedResponse = Self.describe(response)
-                self?.status = "Authenticated response received"
+                self?.decryptedResponse = decrypted
+                self?.status = "Response received"
             } catch is CancellationError {
                 return
             } catch {
@@ -95,14 +94,5 @@ final class ContentViewModel {
         if updateStatus {
             status = "Request cancelled"
         }
-    }
-
-    private static func describe(_ response: ResponsePlaintext) -> String {
-        """
-        Code: \(response.code)
-        Request: \(response.requestID)
-        Receipt: \(response.receiptID)
-        Message: \(response.message)
-        """
     }
 }

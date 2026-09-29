@@ -11,3 +11,4 @@ build/
 
 # Machine-local endpoint overrides
 Config/Local.xcconfig
+Config/_Local.xcconfig

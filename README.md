@@ -16,8 +16,9 @@ Open `lab.ios.SecureCommunication.xcodeproj` and run the
 `https://zsk.labs.def.dev/secure-communication/request`
 
 For an instructor-managed local service, copy `Config/Local.example.xcconfig`
-to the ignored `Config/Local.xcconfig` and select it as the app target's base
-configuration.
+to the ignored `Config/Local.xcconfig`; `Hosted.xcconfig` includes it
+automatically while it exists, so no Xcode change is needed. Delete it to
+return to the hosted endpoint.
 
 The bundled keys are shared classroom material rather than per-device
 credentials. Protocol, server, and key-operations documentation is kept in the
